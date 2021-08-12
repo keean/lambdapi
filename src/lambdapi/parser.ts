@@ -29,7 +29,7 @@ const identifier = token(seqMap((a, b, c) => a + b.join('') + c.join(''),
 // Parser
 
 function unzip<A,B>(xs: [A,B][]): [A[], B[]] {
-    return xs.reduce(([ls,rs]: [A[],B[]], [l,r]: [A,B]) => tuple([l, ...ls], [r, ...rs]), tuple([], []));
+    return xs.reduce(([ls,rs]: [A[],B[]], [l,r]: [A,B]) => [[...ls, l], [...rs, r]], tuple([], []));
 }
 
 function zip<A>([ls,rs]:[string[], A[]]): Bind<A>[] {
@@ -52,7 +52,7 @@ function parseBinding(iterm: Parser<Attr,ITerm>, lam: Parser<Attr,CTerm>, b: boo
 function parseBindings(iterm: Parser<Attr,ITerm>, lam: Parser<Attr,CTerm>, b: boolean): Parser<Attr,[string[],CTerm[]]> {
     return RMap(([xt, e]:[[string, CTerm][], Attr]) => {
             const [xs, ts] = unzip(xt);
-            return [[...xs.reverse(), ...e], ts.reverse()];
+            return [[...xs, ...e], ts];
         }, LMap(e => tuple(e, e), First(Either(
         many1(parens(parseBinding(iterm, lam, b))),
         RMap(x => [x], parseBinding(iterm, lam, true))
