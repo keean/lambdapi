@@ -1,4 +1,4 @@
-import {quotedString, maybe, parens, tuple, First, Second, LMap, token, second, string, seqMap, many, many1, opt, OneOf, RMap, Parser, Fix, Either, Return, Compose, branch, Try, product, choice} from '../deps.ts';
+import {quotedString, maybe, parens, tuple, First, Second, LMap, token, second, string, seqMap, many, many1, opt, OneOf, RMap, Parser, Fix, Either, Return, Compose, branch, Try, product} from '../deps.ts';
 import {ITerm, Bound, Free, App, Inf, Lam, CTerm, Ann, Pi, Star} from './ast.ts';
 import {Statement, Let, Assume, PutStrLn, Out, Eval, Global, Bind} from '../common.ts';
 
@@ -20,9 +20,9 @@ const keywordForall: Parser<Attr, string> = token(Either(OneOf('∀'), string('f
 const operatorPoint: Parser<Attr, string> = token(string('.'));
 
 const identifier = token(seqMap((a, b, c) => a + b.join('') + c.join(''),
-    OneOf('ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩωabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'),
-    many(OneOf('ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩωαabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789_')),
-    many(OneOf("ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩωαabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'"))
+    OneOf('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩω'),
+    many(OneOf('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩω')),
+    many(OneOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'ΑαΒβΓγΔδΕεΖζΗηΘθΙιΚκΛΜμΝνΞξΟοΠπΡρΣσςΤτΥυΦφΧχΨψΩω"))
 )) as Parser<Attr, string>;
 
 //----------------------------------------------------------------------------
@@ -76,7 +76,7 @@ function parseCTerm3(iterm: Parser<Attr,ITerm>): Parser<Attr,CTerm> {
     return Either(Try(parens(parseLam(iterm))), RMap(Inf, parseITerm3(iterm)));
 }
 
-export const parseITerm0: Parser<Attr, ITerm> = Fix(iterm => choice(
+export const parseITerm0: Parser<Attr, ITerm> = Fix(iterm => branch(
     RMap(([u, [t, ...ts]]) => ts.reduce((acc, x) => Pi(x, Inf(acc)), Pi(t, u)), Compose(
         second(keywordForall, parseBindings(iterm, parseLam(iterm), true)),
         First(second(operatorPoint, parseCTerm0(iterm, parseLam(iterm))))
@@ -112,7 +112,7 @@ export function parseITerm2(iterm: Parser<Attr, ITerm>): Parser<Attr, ITerm> {
 }
 
 function parseITerm3(iterm: Parser<Attr,ITerm>): Parser<Attr,ITerm> {
-    return choice(
+    return branch(
         RMap(_ => Star(), operatorStar),
         //RMap(toNat, integer),
         RMap(([vars, x]) => {

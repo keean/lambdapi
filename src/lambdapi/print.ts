@@ -1,17 +1,10 @@
-import {Type, nPrint, parensIf, vars} from '../common.ts';
+import {nPrint, parensIf, vars} from '../common.ts';
 import {ITerm, CTerm} from './ast.ts';
-
-function tPrint(p: number, x: Type): string {
-    switch (x.tag) {
-        case 'tfree': return nPrint(x.tfree);
-        case 'fun': return parensIf(p > 0, `${tPrint(0, x.dom)} → ${tPrint(0, x.cod)}`);
-    }
-}
 
 export function iPrint(p: number, ii: number, x: ITerm): string {
     switch (x.tag) {
         case 'ann': return parensIf(p > 1, `${cPrint(2, ii, x.cTerm)} :: ${cPrint(0, ii, x.tTerm)}`);
-        case 'star': return '*';
+        case 'sort': return x.sort;
         case 'pi': if (x.cod.tag === 'inf' && x.cod.inf.tag === 'pi') {
             return parensIf(p > 0, nestedForall(ii + 2, [[ii + 1, x.cod.inf.dom], [ii, x.dom]], x.cod.inf.cod));
         } else {
@@ -32,10 +25,6 @@ function cPrint(p: number, ii: number, x: CTerm): string {
 
 export function print(x: CTerm): string {
     return cPrint(0, 0, x);
-}
-
-export function printType(t: Type): string {
-    return tPrint(0, t);
 }
 
 function nestedForall(ii: number, ds: [number, CTerm][], x: CTerm): string {

@@ -1,4 +1,4 @@
-import { readLines, parse, Parser, many } from './deps.ts';
+import { readLines, parse, Parser, many, Result } from './deps.ts';
 import { Global, Name, Statement, NameEnv } from "./common.ts";
 
 
@@ -129,14 +129,16 @@ export async function readEvalPrint<I,C,V,T,TInf,Inf>(int: Interpreter<I,C,V,T,T
     const prompt = new TextEncoder().encode(int.iprompt);
     let state = State<V,Inf>();
     Deno.stdout.writeSync(prompt);
-    for await (const line of readLines(Deno.stdin)) {
-        const cmd = interpretCommand(line);
-        const newState = await handleCommand(int, state, cmd);
-        //console.debug(state);
-        if (newState !== undefined) {
-            state = newState;
-        } else {
-            return;
+    for await (const rawLine of readLines(Deno.stdin)) {
+        const line = rawLine.trim();
+        if (line) {
+            const cmd = interpretCommand(line);
+            const newState = await handleCommand(int, state, cmd);
+            if (newState !== undefined) {
+                state = newState;
+            } else {
+                return;
+            }
         }
         Deno.stdout.writeSync(prompt);
     }
@@ -172,16 +174,13 @@ async function handleCommand<I,C,V,T,TInf,Inf>(int: Interpreter<I,C,V,T,TInf, In
             return [out, ve, te];
         case 'typeOf': {
             const x = parse(int.iiparse)({cs: cmd.typeOf, pos: 0, attr: []});
-            console.dir(x, {depth: Number.MAX_SAFE_INTEGER});
             if (x.result !== undefined) {
                 const t = iinfer(int, ve, te, x.result);
                 if (t !== undefined) {
                     console.log(int.itprint(t));
                 }
             } else {
-                for (const e in x.errors) {
-                    console.log(e);
-                }
+                showError(x);
             }
             return [out, ve, te];
         }
@@ -210,12 +209,13 @@ async function compileFile<I,C,V,T,TInf,Inf>(int: Interpreter<I,C,V,T,TInf, Inf>
 
 function compilePhrase<I,C,V,T,TInf,Inf>(int: Interpreter<I,C,V,T,TInf, Inf>, [out, ve, te]: State<V,Inf>, n: string): State<V,Inf>|undefined {
     const x = parse(int.isparse)({cs:n, pos:0, attr:[]});
-    console.log('=====================================');
-    console.dir(x, {depth: Number.MAX_SAFE_INTEGER});
-    console.log('=====================================');
+    //console.log('=====================================');
+    //console.dir(x, {depth: Number.MAX_SAFE_INTEGER});
+    //console.log('=====================================');
     if (x.result !== undefined) {
         return handleStmt(int, [out, ve, te], x.result);
     } else {
+        showError(x);
         return [out, ve, te];
     }
 }
@@ -278,3 +278,11 @@ export function check<I,C,V,T,TInf,Inf>(int: Interpreter<I,C,V,T,TInf, Inf>, [ou
     kp(x, v);
     return k(x, v);
 } 
+
+function showError<A>({cs, errors}: Result<A>) {
+    const es = errors.sort((x, y) => x.pos - y.pos);
+    console.log(cs);
+    for (const e of es) {
+        console.log(`${' '.repeat(e.pos)}^ ${e.error}`);
+    }
+}

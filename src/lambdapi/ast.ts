@@ -7,9 +7,9 @@ export function Ann(cTerm: CTerm, tTerm: CTerm): ITerm {
     return {tag: 'ann', cTerm, tTerm} 
 }
 
-export type Star = {tag: 'star'};
-export function Star(): ITerm {
-    return {tag: 'star'};
+export type Sort = {tag: 'sort', sort: string};
+export function Sort(sort: string): ITerm {
+    return {tag: 'sort', sort};
 }
 
 export type Pi = {tag: 'pi', dom: CTerm, cod: CTerm};
@@ -34,18 +34,26 @@ export function App(iTerm: ITerm, cTerm: CTerm): ITerm {
 
 export type ITerm =
     | Ann
-    | Star
+    | Sort
     | Pi
     | Bound
     | Free
     | App
     ;
 
+export function Star(): ITerm {
+    return Sort('*');
+}
+
+export function Box(): ITerm {
+    return Sort('?');
+}
+
 export function iTermEq(l: ITerm, r: ITerm): boolean {
     if (l.tag === 'ann' && r.tag === 'ann') {
         return cTermEq(l.cTerm, r.cTerm) && cTermEq(l.tTerm, r.tTerm);
-    } else if (l.tag === 'star' && r.tag === 'star') {
-        return true;
+    } else if (l.tag === 'sort' && r.tag === 'sort') {
+        return l.sort === r.sort;
     } else if (l.tag === 'pi' && r.tag === 'pi') {
         return cTermEq(l.dom, r.dom) && cTermEq(l.cod, r.cod);
     } else if (l.tag === 'bound' && r.tag === 'bound') {
@@ -91,9 +99,9 @@ export function VLam(vlam: (_: Value) => Value): Value {
     return {tag: 'vlam', vlam};
 }
 
-export type VStar = {tag: 'vstar'};
-export function VStar(): Value {
-    return {tag: 'vstar'};
+export type VSort = {tag: 'vsort', vsort: string};
+export function VSort(vsort: string): Value {
+    return {tag: 'vsort', vsort};
 }
 
 export type VPi = {tag: 'vpi', dom: Value, cod: (_:Value) => Value};
@@ -108,10 +116,18 @@ export function VNeutral(vneutral: Neutral): Value {
 
 export type Value =
     | VLam
-    | VStar
+    | VSort
     | VPi
     | VNeutral
     ;
+
+export function VStar() {
+    return VSort('*');
+}
+
+export function VBox() {
+    return VSort('?');
+}
 
 // Neutral
 

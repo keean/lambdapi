@@ -1,5 +1,5 @@
 import {Local, Name, NameEnv} from '../common.ts'
-import {ITerm, CTerm, Context, Ann, App, Inf, Lam, Free, Star, contextGet, Pi, VStar, Type, Value, vfree, cTermEq} from './ast.ts';
+import {ITerm, CTerm, Context, Ann, App, Inf, Lam, Free, contextGet, Pi, VSort, Type, Value, vfree, cTermEq, VStar} from './ast.ts';
 import {cEval} from './eval.ts';
 import { iPrint, print } from "./print.ts";
 import { quote0 } from "./quote.ts";
@@ -25,7 +25,7 @@ export function iType0(t: ITerm, g: {nameEnv: NameEnv<Value>, env: Context}): Ty
     return iType(t, g, 0);
 }
 
-export function iType(t: ITerm, g: {nameEnv: NameEnv<Value>, env: Context}, i: number): Type {
+function iType(t: ITerm, g: {nameEnv: NameEnv<Value>, env: Context}, i: number): Type {
     switch (t.tag) {
         case 'ann': {
             cType(t.tTerm, g, i, VStar());
@@ -33,8 +33,8 @@ export function iType(t: ITerm, g: {nameEnv: NameEnv<Value>, env: Context}, i: n
             cType(t.cTerm, g, i, u);
             return u;
         }
-        case 'star':
-            return VStar();
+        case 'sort': 
+            return VSort(t.sort);
         case 'pi': {
             cType(t.dom, g, i, VStar());
             const u = cEval(t.dom, {nameEnv: g.nameEnv, env: []});
@@ -62,7 +62,7 @@ export function iType(t: ITerm, g: {nameEnv: NameEnv<Value>, env: Context}, i: n
                     cType(t.cTerm, g, i, s.dom);
                     return s.cod(cEval(t.cTerm, {nameEnv: g.nameEnv, env: []}));
                 default:
-                    throw TypeError('illegal application');
+                    throw TypeError(`illegal application ${print(quote0(s))}`);
             } 
         }
     }
@@ -96,7 +96,7 @@ function cType(t: CTerm, g: {nameEnv: NameEnv<Value>, env: Context}, i: number, 
 function iSubst(l: ITerm, r: ITerm, i: number): ITerm {
     switch(l.tag) {
         case 'ann': return Ann(cSubst(l.cTerm, r, i), cSubst(l.tTerm, r, i));
-        case 'star': return Star();
+        case 'sort': return l;
         case 'pi': return Pi(cSubst(l.dom, r, i), cSubst(l.cod, r, i + 1));
         case 'bound': return (i === l.bound) ? r : l;
         case 'free': return l;

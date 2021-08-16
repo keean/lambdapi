@@ -5,13 +5,13 @@ import {readEvalPrint, Interpreter, State, check} from '../repl.ts';
 import {print} from './print.ts';
 import {quote0} from './quote.ts';
 import {iEval} from './eval.ts';
-import {iType} from './check.ts';
+import {iType0} from './check.ts';
 
 
 const lp: Interpreter<ITerm,CTerm,Value,Value,CTerm,Value> = {
     iname: 'lambda-Pi',
     iprompt: 'LP> ',
-    iitype: (v, c, t) => iType(t, {nameEnv: v, env: c}, 0),
+    iitype: (v, c, t) => iType0(t, {nameEnv: v, env: c}),
     iquote: quote0,
     ieval: (nameEnv, x) => iEval(x, {nameEnv, env: []}),
     ihastype: x => x,

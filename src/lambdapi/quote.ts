@@ -1,5 +1,5 @@
 import {Global, Local, Name, Quote} from '../common.ts';
-import {App, Bound, CTerm, Free, Inf, ITerm, Lam, Neutral, Pi, Star, Value, vfree } from './ast.ts';
+import {App, Bound, CTerm, Free, Inf, ITerm, Lam, Neutral, Pi, Sort, Value, vfree } from './ast.ts';
 
 export function boundfree(ii: number, n: Name): ITerm {
     switch (n.tag) {
@@ -20,7 +20,7 @@ export function quote(ii: number, x: Value): CTerm {
     switch (x.tag) {
         case 'vlam': return Lam(quote(ii + 1, x.vlam(vfree(Quote(ii)))));
         case 'vneutral': return Inf(neutralQuote(ii, x.vneutral));
-        case 'vstar': return Inf(Star());
+        case 'vsort': return Inf(Sort(x.vsort));
         case 'vpi': return Inf(Pi(quote(ii, x.dom), quote(ii + 1, x.cod(vfree(Quote(ii))))));
     }
 }
