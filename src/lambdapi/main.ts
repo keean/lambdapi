@@ -1,6 +1,6 @@
 import {parseITerm0, parseStatement} from './parser.ts';
 import {Global} from '../common.ts';
-import {Ann, CTerm, Inf, ITerm, Star, Type, Value} from './ast.ts';
+import {Ann, CTerm, Inf, ITerm, Sort, Type, Value} from './ast.ts';
 import {readEvalPrint, Interpreter, State, check} from '../repl.ts';
 import {print} from './print.ts';
 import {quote0} from './quote.ts';
@@ -17,6 +17,7 @@ const lp: Interpreter<ITerm,CTerm,Value,Value,CTerm,Value> = {
     ihastype: x => x,
     icprint: x => print(x),
     itprint: x => print(quote0(x)),
+    iiprint: x => print(quote0(x)),
     iiparse: parseITerm0,
     isparse: parseStatement,
     iassume: lpassume,
@@ -26,7 +27,7 @@ function lpassume([out, ve, te]: State<Value,Type>, {name, info}: {name: string,
     return check(
         lp,
         [out, ve, te],
-        Ann(info, Inf(Star())),
+        Ann(info, Inf(Sort(''))), // empty sort matches any sort.
         (_1, _2) => {},
         (_, info) => [out, ve, [{name: Global(name), info}, ...te]]
     );

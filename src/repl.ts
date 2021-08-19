@@ -25,6 +25,7 @@ export type Interpreter<I,C,V,T,TInf,Inf> = {
     ihastype: (_:T) => Inf;
     icprint: (_:C) => string,
     itprint: (_:T) => string,
+    iiprint: (_:Inf) => string,
     iiparse: Parser<string[], I>,
     isparse: Parser<string[], Statement<I, TInf>>,
     iassume: (_1:State<V,Inf>, _:{name: string, info: TInf}) => State<V,Inf>,
@@ -185,7 +186,7 @@ async function handleCommand<I,C,V,T,TInf,Inf>(int: Interpreter<I,C,V,T,TInf, In
             return [out, ve, te];
         }
         case 'browse':
-            console.log(te.reduce((acc,x) => x.name.tag === 'global' ? [x.name.global, ...acc] : acc, new Array<string>()).join('\n'));
+            console.log(te.reduce((acc,x) => x.name.tag === 'global' ? [`${x.name.global} :: ${int.iiprint(x.info)}`, ...acc] : acc, new Array<string>()).join('\n'));
             return [out, ve, te];
         case 'compile':
             switch(cmd.compile.tag) {

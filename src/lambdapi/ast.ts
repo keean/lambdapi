@@ -49,23 +49,6 @@ export function Box(): ITerm {
     return Sort('?');
 }
 
-export function iTermEq(l: ITerm, r: ITerm): boolean {
-    if (l.tag === 'ann' && r.tag === 'ann') {
-        return cTermEq(l.cTerm, r.cTerm) && cTermEq(l.tTerm, r.tTerm);
-    } else if (l.tag === 'sort' && r.tag === 'sort') {
-        return l.sort === r.sort;
-    } else if (l.tag === 'pi' && r.tag === 'pi') {
-        return cTermEq(l.dom, r.dom) && cTermEq(l.cod, r.cod);
-    } else if (l.tag === 'bound' && r.tag === 'bound') {
-        return l.bound === r.bound;
-    } else if (l.tag === 'free' && r.tag === 'free') {
-        return nameEq(l.free, r.free);
-    } else if (l.tag === 'app' && r.tag === 'app') {
-        return iTermEq(l.iTerm, r.iTerm) && cTermEq(l.cTerm, r.cTerm);
-    }
-    return false;
-}
-
 // CTerm
 
 export type Inf = {tag: 'inf', inf: ITerm};
@@ -82,15 +65,6 @@ export type CTerm =
     | Inf
     | Lam
     ;
-
-export function cTermEq(l: CTerm, r: CTerm): boolean {
-    if (l.tag === 'inf' && r.tag === 'inf') {
-        return iTermEq(l.inf, r.inf);
-    } else if (l.tag === 'lam' && r.tag === 'lam') {
-        return cTermEq(l.lam, r.lam);
-    }
-    return false;
-}
 
 // Value
 
