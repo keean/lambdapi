@@ -41,22 +41,22 @@ function zip<A>([ls,rs]:[string[], A[]]): Bind<A>[] {
     return xs;
 }
 
-function parseBinding(iterm: Parser<Attr,ITerm>, lam: Parser<Attr,CTerm>, b: boolean): Parser<Attr,[string,CTerm]> {
-    return seqMap((x:string, _, t:CTerm) => tuple(x, t), 
+function parseBinding(iterm: Parser<Attr,ITerm>, lam: Parser<Attr,CTerm>, b: boolean): Parser<[Attr,[Attr,CTerm[]]],[Attr,CTerm[]]> {
+    return RMap(([[e,t],[es,ts]]: [[string,CTerm],[Attr,CTerm[]]]) => [[e, ...es], [t, ...ts]], First(seqMap((x:string, _:string, t:CTerm) => tuple(x, t), 
         identifier,
         operatorColon2,
         LMap((e: Attr) => b ? e : [], parseCTerm0(iterm, lam))
-    );
+    )));
 }
 
 function parseBindings(iterm: Parser<Attr,ITerm>, lam: Parser<Attr,CTerm>, b: boolean): Parser<Attr,[string[],CTerm[]]> {
-    return RMap(([xt, e]:[[string, CTerm][], Attr]) => {
-            const [xs, ts] = unzip(xt);
-            return [[...xs, ...e], ts];
-        }, LMap(e => tuple(e, e), First(Either(
-        many1(parens(parseBinding(iterm, lam, b))),
-        RMap(x => [x], parseBinding(iterm, lam, true))
-    ))));
+    return LMap(es => tuple(es, tuple(es, [])), Either(
+        Fix<[Attr,[Attr,CTerm[]]], [Attr,CTerm[]]>(loop => Either(
+            Try(Compose(RMap(([es, ts]: [Attr,CTerm[]]) => tuple(es, tuple(es, ts)), parens(parseBinding(iterm, lam, b))), loop)),
+            Return(([_, r]:[Attr,[Attr,CTerm[]]]) => r)
+        )),
+        parseBinding(iterm, lam, true)
+    ));
 }
     
 function parseLam(iterm: Parser<Attr,ITerm>): Parser<Attr,CTerm> {
